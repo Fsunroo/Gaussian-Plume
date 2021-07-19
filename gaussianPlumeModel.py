@@ -78,7 +78,8 @@ stab1=1  # set from 1-6
 stability_used=CONSTANT_STABILITY 
 
 
-output=PLAN_VIEW 
+output=HEIGHT_SLICE  
+ 
 x_slice=26  # position (1-50) to take the slice in the x-direction
 y_slice=1   # position (1-50) to plot concentrations vs time
 
@@ -211,6 +212,9 @@ elif output == HEIGHT_SLICE:
    cb1=plt.colorbar() 
    cb1.set_label('$m$ g m$^{-3}$') 
    plt.show()
+   plt.show(block=False)
+   plt.pause(0)
+   plt.close()
 
 elif output == SURFACE_TIME:
    f,(ax1, ax2) = plt.subplots(2, sharex=True, sharey=False)
@@ -229,6 +233,9 @@ elif output == SURFACE_TIME:
    ax2.set_xlabel('time (days)') 
    ax2.set_ylabel('Stability parameter') 
    f.show()
+   plt.show(block=False)
+   plt.pause(0)
+   plt.close()
    
 elif output == NO_PLOT:
    print('Don''t plot') 
