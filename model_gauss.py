@@ -62,23 +62,13 @@ class gauss_model():
         self.dxy=100           # resolution of the model in both x and y directions
         self.dz=10
         self.domain= 5
-        #self.x =  np.mgrid[-500*self.domain:500*self.domain+self.dxy:self.dxy]
-        self.x=np.mgrid[-2500:2500+self.dxy:self.dxy]  # solve on a 5 km domain
-        self.y=self.x               # x-grid is same as y-grid
-        ###########################################################################
+         ###########################################################################
         self.set_input()
-        self.config()
-        self.calculate_wind()
+
     
     # SECTION 1: Configuration
     # Variables can be changed by the user+++++++++++++++++++++++++++++++++++++
     def set_input(self):
-        self.RH=0.90 
-        self.aerosol_type=self.SODIUM_CHLORIDE 
-
-        self.dry_size=60e-9 
-        self.humidify=self.DRY_AEROSOL 
-
         self.stab1=1  # set from 1-6
         self.stability_used=self.CONSTANT_STABILITY 
 
@@ -88,24 +78,31 @@ class gauss_model():
         self.x_slice=26  # position (1-50) to take the slice in the x-direction
         self.y_slice=1   # position (1-50) to plot concentrations vs time
 
-        self.wind=self.PREVAILING_WIND 
-        self.stacks=self.ONE_STACK 
-        self.stack_x=[0., 1000., -200.] 
-        self.stack_y=[0., 250., -500.] 
+        self.stack_x=0.
+        self.stack_y=0.
+
+        self.wind_speed_int = 5.
+        self.Rural = True
 
 
-        self.Q=[40., 40., 40.]  # mass emitted per unit time
-        self.H=[50., 50., 50.]  # stack height, m
+        self.Q=[40.]  # mass emitted per unit time
+        self.H=[50.]  # stack height, m
         self.days=50           # run the model for 365 days
+        self.reciver_x = 10
+        self.reciver_y = 500
+        self.reciver_z = 10
         #--------------------------------------------------------------------------
         self.times=np.mgrid[1:(self.days)*24+1:1]/24. 
 
         self.Dy=10. 
         self.Dz=10. 
+
+  
+
     # SECTION 2: Act on the configuration information
 
     # Decide which stability profile to use
-    def config(self):
+    def config_stability(self):
         if self.stability_used == self.CONSTANT_STABILITY:
         
             self.stability=self.stab1*np.ones((self.days*24,1)) 
@@ -118,7 +115,15 @@ class gauss_model():
             sys.exit()
 
     def output_prepare(self):
+        self.x =  np.mgrid[-500*self.domain:500*self.domain+self.dxy:self.dxy]
+
+        #self.x=np.mgrid[-2500:2500+self.dxy:self.dxy]  # solve on a 5 km domain
+        self.y=self.x               # x-grid is same as y-grid
         # decide what kind of run to do, plan view or y-z slice, or time series
+        self.nearst_x_indx = (np.abs(self.x - self.reciver_x)).argmin()
+        self.nearst_y_indx = (np.abs(self.y - self.reciver_y)).argmin()
+        print(self.nearst_y_indx)
+        #self.nearst_z_indx = (np.abs(self.z - self.reciver_z)).argmin()
         if self.output == self.PLAN_VIEW or self.output == self.SURFACE_TIME or self.output == self.NO_PLOT:
 
             self.C1=np.zeros((len(self.x),len(self.y),self.days*24))  # array to store data, initialised to be zero
@@ -138,67 +143,53 @@ class gauss_model():
             sys.exit()
     
     def calculate_wind(self):
-        self.wind_speed=5.*np.ones((self.days*24,1))  # m/s
-        if self.wind == self.CONSTANT_WIND:
-            self.wind_dir=0.*np.ones((self.days*24,1)) 
-            self.wind_dir_str='Constant wind' 
-        elif self.wind == self.FLUCTUATING_WIND:
-            self.wind_dir=360.*np.random.rand(self.days*24,1) 
-            self.wind_dir_str='Random wind' 
-        elif self.wind == self.PREVAILING_WIND:
-            self.wind_dir=-np.sqrt(2.)*erfcinv(2.*np.random.rand(24*self.days,1))*40.  #norminv(rand(days.*24,1),0,40) 
-            # note at this point you can add on the prevailing wind direction, i.e.
-            # wind_dir=wind_dir+200 
-            self.wind_dir[np.where(self.wind_dir>=360.)]= \
-                    np.mod(self.wind_dir[np.where(self.wind_dir>=360)],360) 
-            self.wind_dir_str='Prevailing wind' 
-        else:
-            sys.exit()
+        self.wind_speed=self.wind_speed_int*np.ones((self.days*24,1))  # m/s
+        self.wind_dir=0.*np.ones((self.days*24,1)) 
+        self.wind_dir_str='Constant wind' 
 
     def run(self,PB):
+        self.config_stability()
+        self.calculate_wind()
         self.output_prepare()
         self.C1=np.zeros((len(self.x),len(self.y),len(self.wind_dir)))
         PB.setProperty('value',0)
         for i in range(0,len(self.wind_dir)):
-            for j in range(0,self.stacks):
-                    #PB.setValue(PB.value()+1)
-                    PB.setValue((i/len(self.wind_dir)*100)+1)
-                    #print(i)
-                    #print(int(i/len(self.wind_dir)))
-                    self.C=np.ones((len(self.x),len(self.y)))
-                    self.C=gauss_func(self.Q[j],self.wind_speed[i],self.wind_dir[i],self.x,self.y,self.z,
-                        self.stack_x[j],self.stack_y[j],self.H[j],self.Dy,self.Dz,self.stability[i]) 
-                    self.C1[:,:,i]=self.C1[:,:,i]+self.C 
+            PB.setValue((i/len(self.wind_dir)*100)+1)
+            self.C=np.ones((len(self.x),len(self.y)))
+            self.C=gauss_func(self.Q,self.wind_speed[i],self.wind_dir[i],self.x,self.y,self.z,
+                self.stack_x,self.stack_y,self.H,self.Dy,self.Dz,self.stability[i],self.Rural) 
+            self.C1[:,:,i]=self.C1[:,:,i]+self.C 
 
-        #self.calculate_humidify()
         self.result()
 
 
-    def calculate_humidify(self):
-        if self.humidify == self.DRY_AEROSOL:
-            print('do not humidify') 
-        elif self.humidify == self.HUMIDIFY:
-            mass=np.pi/6.*self.rho_s[self.aerosol_type]*self.dry_size**3. 
-            moles=mass/self.Ms[self.aerosol_type] 
-                    
-            nw=self.RH*self.nu[self.aerosol_type]*moles/(1.-self.RH) 
-            mass2=nw*self.Mw+moles*self.Ms[self.aerosol_type] 
-            self.C1=self.C1*mass2/mass  
-        else:
-            sys.exit()
-      
     def result(self):
         from matplotlib.backends.backend_qt5agg import FigureCanvas
         from matplotlib.figure import Figure
-        # output the plots
-        
+        self.mean_C1 = np.mean(self.C1,axis=2)*1e6
+        print(self.mean_C1[self.nearst_x_indx,self.nearst_y_indx])
+        self.pointpolution = self.mean_C1[self.nearst_x_indx,self.nearst_y_indx]    
+
+        '''self.pointpolution = self.mean_C1[int(self.reciver_x/self.dxy),int(self.reciver_y/self.dxy)]
+        print(self.mean_C1.shape)
+        self.maxpoint = np.unravel_index(np.argmax(self.mean_C1, axis=None), self.mean_C1.shape)'''
+
+        #indxx = self.x[(self.reciver_x)
+        #indxy = self.y.index(self.reciver_y)
+        #self.pointpolution = self.mean_C1[indxx,indxy]
+        #for i in range(0,len(self.wind_dir)):
+            #self.C=np.ones((len(self.x),len(self.y)))
+            #self.pointpolution=gauss_func(self.Q,self.wind_speed[i],self.wind_dir[i],self.reciver_x,self.reciver_y,self.reciver_z,
+            #    self.stack_x,self.stack_y,self.H,self.Dy,self.Dz,self.stability[i],self.Rural) 
+            #self.C1[:,:,i]=self.C1[:,:,i]+self.C 
+
         if self.output == self.PLAN_VIEW:
             self.fig = plt.figure()
             self.canvas = FigureCanvas(self.fig)
             self.ax = self.fig.subplots()
             plt.ioff()
 
-            self.ax = plt.pcolor(self.x,self.y,np.mean(self.C1,axis=2)*1e6, cmap='jet_r',shading='auto') 
+            self.ax = plt.pcolor(self.x,self.y,self.mean_C1, cmap='jet_r',shading='auto') 
             plt.clim((0, 1e2)) 
             plt.title(self.stability_str + '\n' + self.wind_dir_str) 
             plt.xlabel('x (metres)') 
@@ -206,13 +197,7 @@ class gauss_model():
             cb1=plt.colorbar() 
             cb1.set_label('$m$ g m$^{-3}$') 
             self.canvas.draw()
-            
-
-            #self.plt.show(block=False)
-            #self.canvas.show()
-            #plt.pause(0)
-            #plt.close()
-
+ 
 
         elif self.output == self.HEIGHT_SLICE:
             self.fig = plt.figure()
@@ -220,42 +205,42 @@ class gauss_model():
             self.ax = self.fig.subplots()
             plt.ioff()
 
-            self.ax = plt.pcolor(self.y,self.z,np.mean(self.C1,axis=2)*1e6, cmap='jet_r',shading='auto')      
+            self.ax = plt.pcolor(self.y,self.z,self.mean_C1, cmap='jet_r',shading='auto')      
             plt.clim((0,1e2)) 
             plt.xlabel('y (metres)') 
             plt.ylabel('z (metres)') 
             plt.title(self.stability_str + '\n' + self.wind_dir_str) 
-
-            '''plt.show()
-            plt.show(block=False)
-            plt.pause(0)
-            plt.close()'''
 
             cb1=plt.colorbar() 
             cb1.set_label('$m$ g m$^{-3}$') 
             self.canvas.draw()
 
         elif self.output == self.SURFACE_TIME:
-            print('here')
-            f,(ax1, ax2) = plt.subplots(2, sharex=True, sharey=False)
-            ax1.plot(self.times,1e6*np.squeeze(self.C1[self.y_slice,self.x_slice,:])) 
+            self.fig,(self.ax1, self.ax2) = plt.subplots(2, sharex=True, sharey=False)
+            self.canvas = FigureCanvas(self.fig)
+            plt.ioff()
+            self.ax1.plot(self.times,1e6*np.squeeze(self.C1[self.y_slice,self.x_slice,:])) 
             try:
-                ax1.plot(self.times,smooth(1e6*np.squeeze(self.C1[self.y_slice,self.x_slice,:]),24),'r') 
-                ax1.legend(('Hourly mean','Daily mean'))
+                self.ax1.plot(self.times,smooth(1e6*np.squeeze(self.C1[self.y_slice,self.x_slice,:]),24),'r') 
+                self.ax1.legend(('Hourly mean','Daily mean'))
             except:
                 sys.exit()
                 
-            ax1.set_xlabel('time (days)') 
-            ax1.set_ylabel('Mass loading ($m$ g m$^{-3}$)') 
-            ax1.set_title(self.stability_str +'\n' + self.wind_dir_str) 
+            self.ax1.set_xlabel('time (days)') 
+            self.ax1.set_ylabel('Mass loading ($m$ g m$^{-3}$)') 
+            self.ax1.set_title(self.stability_str +'\n' + self.wind_dir_str) 
 
-            ax2.plot(self.times,self.stability) 
-            ax2.set_xlabel('time (days)') 
-            ax2.set_ylabel('Stability parameter') 
-            f.show()
+            self.ax2.plot(self.times,self.stability) 
+            self.ax2.set_xlabel('time (days)') 
+            self.ax2.set_ylabel('Stability parameter') 
+            '''self.fig.show()
             plt.show(block=False)
             plt.pause(0)
-            plt.close()
+            plt.close()'''
+            #cb1=plt.colorbar() 
+            #cb1.set_label('$m$ g m$^{-3}$') 
+            self.canvas.draw()
+
         
         elif self.output == self.NO_PLOT:
             print('Don''t plot') 
