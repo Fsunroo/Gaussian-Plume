@@ -85,8 +85,8 @@ class gauss_model():
         self.Rural = True
 
 
-        self.Q=[40.]  # mass emitted per unit time
-        self.H=[50.]  # stack height, m
+        self.Q=40.  # mass emitted per unit time
+        self.H=50.  # stack height, m
         self.days=50           # run the model for 365 days
         self.reciver_x = 10
         self.reciver_y = 500
@@ -115,7 +115,10 @@ class gauss_model():
             sys.exit()
 
     def output_prepare(self):
+
+
         self.x =  np.mgrid[-500*self.domain:500*self.domain+self.dxy:self.dxy]
+        self.x_ref = self.x
 
         #self.x=np.mgrid[-2500:2500+self.dxy:self.dxy]  # solve on a 5 km domain
         self.y=self.x               # x-grid is same as y-grid
@@ -135,6 +138,8 @@ class gauss_model():
         elif self.output == self.HEIGHT_SLICE:
             self.z=np.mgrid[0:500+self.dz:self.dz]        # z-grid
 
+            self.nearst_z_indx = (np.abs(self.z - self.reciver_z)).argmin()
+
             self.C1=np.zeros((len(self.y),len(self.z),self.days*24))  # array to store data, initialised to be zero
 
             [self.y,self.z]=np.meshgrid(self.y,self.z)  # y and z defined at all positions on the grid
@@ -144,8 +149,21 @@ class gauss_model():
     
     def calculate_wind(self):
         self.wind_speed=self.wind_speed_int*np.ones((self.days*24,1))  # m/s
-        self.wind_dir=0.*np.ones((self.days*24,1)) 
-        self.wind_dir_str='Constant wind' 
+        if self.wind == self.CONSTANT_WIND:
+            self.wind_dir=0.*np.ones((self.days*24,1)) 
+            self.wind_dir_str='Constant wind' 
+        elif self.wind == self.FLUCTUATING_WIND:
+            self.wind_dir=360.*np.random.rand(self.days*24,1) 
+            self.wind_dir_str='Random wind' 
+        elif self.wind == self.PREVAILING_WIND:
+            self.wind_dir=-np.sqrt(2.)*erfcinv(2.*np.random.rand(24*self.days,1))*40.  #norminv(rand(days.*24,1),0,40) 
+            # note at this point you can add on the prevailing wind direction, i.e.
+            # self.wind_dir=self.wind_dir+200 
+            self.wind_dir[np.where(self.wind_dir>=360.)]= \
+                    np.mod(self.wind_dir[np.where(self.wind_dir>=360)],360) 
+            self.wind_dir_str='Prevailing wind' 
+        else:
+            sys.exit() 
 
     def run(self,PB):
         self.config_stability()
@@ -167,13 +185,18 @@ class gauss_model():
         from matplotlib.backends.backend_qt5agg import FigureCanvas
         from matplotlib.figure import Figure
         self.mean_C1 = np.mean(self.C1,axis=2)*1e6
-        print(self.mean_C1[self.nearst_x_indx,self.nearst_y_indx])
-        self.pointpolution = self.mean_C1[self.nearst_x_indx,self.nearst_y_indx]    
+        self.maxa = np.max(self.mean_C1)
 
-        '''self.pointpolution = self.mean_C1[int(self.reciver_x/self.dxy),int(self.reciver_y/self.dxy)]
-        print(self.mean_C1.shape)
-        self.maxpoint = np.unravel_index(np.argmax(self.mean_C1, axis=None), self.mean_C1.shape)'''
+        #self.pointpolution = self.mean_C1[self.nearst_x_indx,self.nearst_y_indx]
 
+        
+
+
+
+
+        #self.pointpolution=gauss_func(self.Q,self.wind_speed_int,self.wind_dir[0],np.asarray(self.reciver_x),np.asarray(self.reciver_y),np.asarray(self.reciver_z),
+        #    self.stack_x,self.stack_y,self.H,self.Dy,self.Dz,self.stability[0],self.Rural) 
+            #    self.stack_x,self.stack_y,self.H,self.Dy,self.Dz,self.stability[i],self.Rural)
         #indxx = self.x[(self.reciver_x)
         #indxy = self.y.index(self.reciver_y)
         #self.pointpolution = self.mean_C1[indxx,indxy]
@@ -197,6 +220,11 @@ class gauss_model():
             cb1=plt.colorbar() 
             cb1.set_label('$m$ g m$^{-3}$') 
             self.canvas.draw()
+
+            (maxpointx_indx,maxpointy_indx) = np.unravel_index(np.argmax(self.mean_C1, axis=None), self.mean_C1.shape)
+            self.maxpointx = self.x_ref[maxpointx_indx]
+            self.maxpointy = self.x_ref[maxpointy_indx]
+            self.pointpolution = self.mean_C1[self.nearst_x_indx,self.nearst_y_indx]
  
 
         elif self.output == self.HEIGHT_SLICE:
@@ -214,6 +242,12 @@ class gauss_model():
             cb1=plt.colorbar() 
             cb1.set_label('$m$ g m$^{-3}$') 
             self.canvas.draw()
+
+            (maxpointy_indx,maxpointz_indx) = np.unravel_index(np.argmax(self.mean_C1, axis=None), self.mean_C1.shape)
+            self.maxpointy = self.x_ref[maxpointy_indx]
+            self.maxpointz = self.x_ref[maxpointz_indx]
+            self.pointpolution = self.mean_C1[self.nearst_y_indx,self.nearst_z_indx]
+
 
         elif self.output == self.SURFACE_TIME:
             self.fig,(self.ax1, self.ax2) = plt.subplots(2, sharex=True, sharey=False)
