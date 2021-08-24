@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./.github/app.gif" alt="Gaussian-Plum" />
+  <img src="./.github/GuassianAppScreenshot.png" alt="Gaussian-Plum" />
 
   &#xa0;
 
@@ -76,7 +76,7 @@ Before starting :checkered_flag:, you need to have
 * requests
 * mechanize
 * pyqt5
-installed, you can do this with ```bash $pip install -r requirements.txt```
+installed, you can do this with ``` $pip install -r requirements.txt```
 
 
 ## Starting ##
