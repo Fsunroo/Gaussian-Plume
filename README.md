@@ -94,7 +94,6 @@ $ pip install -r requirements.txt
 # Run the project
 $ pythhon uiscopus.py
 
-# The server will initialize in the <http://localhost:3000>
 ```
 
 ## License ##
