@@ -1,6 +1,51 @@
-# Atmospheric Dispersion Modelling
+<div align="center" id="top"> 
+  <img src="./.github/app.gif" alt="Gaussian-Plum" />
 
-### Overview
+  &#xa0;
+
+  <!-- <a href="https://python.netlify.app">Demo</a> -->
+</div>
+
+<h1 align="center">Gaussian-Plum</h1>
+
+<p align="center">
+  <img alt="Github top language" src="https://img.shields.io/github/languages/top/fsunroo/Gaussian-Plume?color=56BEB8">
+
+  <img alt="Github language count" src="https://img.shields.io/github/languages/count/fsunroo/Gaussian-Plume?color=56BEB8">
+
+  <img alt="Repository size" src="https://img.shields.io/github/repo-size/fsunroo/Gaussian-Plume?color=56BEB8">
+
+  <img alt="License" src="https://img.shields.io/github/license/fsunroo/Gaussian-Plume?color=56BEB8">
+
+  <!-- <img alt="Github issues" src="https://img.shields.io/github/issues/fsunroo/Gaussian-Plume?color=56BEB8" /> -->
+
+  <!-- <img alt="Github forks" src="https://img.shields.io/github/forks/fsunroo/Gaussian-Plume?color=56BEB8" /> -->
+
+  <!-- <img alt="Github stars" src="https://img.shields.io/github/stars/fsunroo/Gaussian-Plume?color=56BEB8" /> -->
+</p>
+
+<!-- Status -->
+
+<!-- <h4 align="center"> 
+	🚧  Gaussian-Plume 🚀 Under construction...  🚧
+</h4> 
+
+<hr> -->
+
+<p align="center">
+  <a href="#about">About</a> &#xa0; | &#xa0; 
+  <a href="#features">Features</a> &#xa0; | &#xa0;
+  <a href="#requirements">Requirements</a> &#xa0; | &#xa0;
+  <a href="#starting">Starting</a> &#xa0; | &#xa0;
+  <a href="#license">License</a> &#xa0; | &#xa0;
+  <a href="https://github.com/fsunroo" target="_blank">Author</a>
+</p>
+
+<br>
+
+## About ##
+
+
 Contaminants discharged into the air are transported over long distances by large-scale air-flows and dispersed by small-scale air-flows or turbulence, which mix contaminants with clean air. This dispersion by the wind is a very complex process due to the presence of different-sized eddies in the atmospheric flow. Due to this complexity, there is no complete theory that establishes the relationship between ambient conditions of air pollutants and the causative
 meteorological factors and processes.
 
@@ -17,55 +62,48 @@ The process of air pollution modelling contains four stages (data input, dispers
 known and evaluated to ensure a reliable assessment of the significance of any potential
 adverse effects.
 
-### Types of Pollutants representation:
-#### Plumes
-The flow of pollutant in the form of vapor or smoke released into the air. These
-are of considerable importance in the atmospheric dispersion modelling of air pollution.
-These are mainly classified in 3 types:
-* **Buoyant Plumes:** Plumes which are lighter than air because they are at a higher temperature and lower density than the ambient air which surrounds them, or because they are at about the same temperature as the ambient air but have a lower molecular weight and hence lower density than the ambient air. e.g. Methane (CH4) is buoyant because it has lower molecular weight than air.
+## Features ##
 
-* **Dense Gas Plumes:** A plume may have a higher density than air because it has a higher molecular weight than air (for example, a plume of carbon dioxide). A plume may also have a higher density than air if the plume is at a much lower temperature than the air, such plumes are called dense gas plumes.
+* using local topography
+* plottig output
+* simple GUI
 
-* **Passive Flumes:** Plumes which are neither lighter or heavier than air.
 
-#### Particles
-Pollutant releases, especially those from point sources, are often represented
-by a stream of particles (even if the pollutant is a gas), which are transported by the
-model winds and diffuse randomly according to the model turbulence. Particle models
-are computationally expensive, needing at least 105 particles to represent a pollutant
-release, but maybe the best type to represent pollutant concentrations close to the
-source.
+## Requirements ##
 
-#### Puffs
-Pollutant releases can also be represented by a series of puffs of material which
-are also transported by the model winds. Each puff represents a discrete amount of
-pollution, whose volume increases due to turbulent mixing. Puff models are far less
-computationally expensive than particle models, but are not as realistic in their
-description of the pollutant distribution. However, they are often more than adequate,
-and are used for regulatory purposes.
+Before starting :checkered_flag:, you need to have 
+* js2py
+* requests
+* mechanize
+* pyqt5
+installed, you can do this with ```bash $pip install -r requirements.txt```
 
-#### Grid Points
-Pollutant distributions are represented by concentrations on a (regular)
-three-dimensional grid of points. This is the cheapest formulation computationally, but
-difficulties arise when the scale of the pollutant release is smaller than the grid point
-spacing.
 
-## Gaussian-plume models
-The Gaussian-plume formula is derived assuming ‘steady-state’
-conditions. That is, the Gaussian-plume dispersion formulae do not depend on time, although
-they do represent an ensemble time average. The meteorological conditions are assumed to
-remain constant during the dispersion from source to receptor, which is effectively
-instantaneous. Emissions and meteorological conditions can vary from hour to hour but the
-model calculations in each hour are independent of those in other hours. Due to this
-mathematical derivation, it is common to refer to Gaussian-plume models as steady-state
-dispersion models. In practice, however, the plume characteristics do change over time,
-because they depend on changing emissions and meteorological conditions. One consequence
-of the plume formulation is that each hour the plume extends instantaneously out to infinity.
-Concentrations may then be found at points too distant for emitted pollutants to have reached
-them in an hour.
+## Starting ##
 
-**Gaussian-plume models are generally applicable when:**
-- The pollutants are chemically inert, a simple first-order mechanism is appropriate, or the chemistry may be carried out as a post-processing step.
-- The terrain is not steep or complex
-- The meteorology may be considered uniform spatially
-- There are few periods of calm or light winds
+```bash
+# Clone this project
+$ git clone https://github.com/fsunroo/Gaussian-Plume
+
+# Access
+$ cd Gaussian-Plume
+
+# Install requirements
+$ pip install -r requirements.txt
+
+# Run the project
+$ pythhon uiscopus.py
+
+# The server will initialize in the <http://localhost:3000>
+```
+
+## License ##
+
+This project is under license from GPL. For more details, see the [LICENSE](LICENSE) file.
+
+
+Made with :heart: by <a href="https://github.com/fsunroo" target="_blank">Mohammad Farhadi</a>
+
+&#xa0;
+
+<a href="#top">Back to top</a>
