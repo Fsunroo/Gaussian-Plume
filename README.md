@@ -72,10 +72,11 @@ adverse effects.
 ## Requirements ##
 
 Before starting :checkered_flag:, you need to have 
-* js2py
-* requests
-* mechanize
-* pyqt5
+* matplotlib
+* numpy
+* scipy
+* PyQt5
+
 installed, you can do this with ``` $pip install -r requirements.txt```
 
 
